@@ -5,6 +5,7 @@ const ora = require('ora')
 const fs = require('fs')
 const path = require('path')
 const mkdirp = require('mkdirp');
+const download = require('download-git-repo');
 
 const log = console.log,
   getDirName = require('path').dirname;
@@ -48,6 +49,25 @@ const writeFile = (path, contents) => {
   })
 }
 
+const remove = (dir) => {
+  return new Promise(function (resolve, reject) {
+    fs.stat(dir,function (err, stat) {
+      if(stat.isDirectory()){
+        fs.readdir(dir,function (err, files) {
+          files = files.map(file=>path.join(dir,file)); 
+          files = files.map(file=>removePromise(file)); 
+          Promise.all(files).then(function () {
+            fs.rmdir(dir,resolve);
+          })
+        })
+      }else {
+        fs.unlink(dir,resolve)
+      }
+    })
+
+  })
+}
+
 module.exports = prompt(question).then(({ frame }) => {
   const format = frame === 'React' ? '.js' : '.vue',
     checkFormat = ora('检查格式中...\n')
@@ -55,7 +75,7 @@ module.exports = prompt(question).then(({ frame }) => {
   // 识别文件名和format格式是否一致
   checkFormat.start()
   files.forEach(item => {
-    if (!item.includes(format) ) {
+    if (!item.includes(format)) {
       checkFormat.fail()
       log(chalk.red("请选择正确格式"))
       process.exit()
@@ -63,34 +83,45 @@ module.exports = prompt(question).then(({ frame }) => {
   });
   checkFormat.stop()
 
-  const spinner = ora('生成模板中...\n')
+  const spinner = ora('正在下载模板...\n')
   spinner.start()
-  var a = path.resolve(`./templates/${frame}/index${format}`)
-  fs.readFile(a, 'utf8', async (err, data) => {
+
+  download('https://github.com:sillyY/TemplateCLI#master', 'templates', { clone: true }, (err) => {
     if (err) {
-      spinner.stop()
-      log(chalk.red(err))
-      return
+      spinner.fail();
+      log(chalk.red(err));
+    } else {
+      spinner.succeed();
+      var a = path.resolve(`./templates/${frame}/index${format}`)
+      fs.readFile(a, 'utf8', async (err, data) => {
+        if (err) {
+          spinner.stop()
+          log(chalk.red(err))
+          return
+        }
+
+        await Promise.all(
+          files.map(async name => {
+
+            let template = data.replace(
+              /App/g,
+              (name.charAt(0).toUpperCase() + name.slice(1)).replace(format, '')
+            )
+            try {
+              await writeFile(`./${dir}/${name}`, template)
+              return
+            } catch (e) {
+              spinner.fail()
+              log(chalk.red(e))
+              process.exit()
+            }
+          })
+        )
+        spinner.stop()
+        log(chalk.green(`模板生成成功`))
+        await remove(path.join(__dirname, './templates')
+      })
     }
 
-    await Promise.all(
-      files.map(async name => {
-
-        let template = data.replace(
-          /App/g,
-          (name.charAt(0).toUpperCase() + name.slice(1)).replace(format, '')
-        )
-        try {
-          await writeFile(`./${dir}/${name}`, template)
-          return
-        } catch (e) {
-          spinner.fail()
-          log(chalk.red(e))
-          process.exit()
-        }
-      })
-    )
-    spinner.stop()
-    log(chalk.green(`模板生成成功`))
   })
 })

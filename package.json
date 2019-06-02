@@ -1,9 +1,9 @@
 {
-  "name": "TemplateCLI",
-  "version": "1.0.0",
+  "name": "create-template-cli",
+  "version": "1.0.1",
   "description": "vue or react template cli",
   "bin": {
-    "build-react": "bin/index"
+    "tcli": "bin/index.js"
   },
   "repository": "https://github.com/sillyY/TemplateCLI.git",
   "author": "sillyy <965768042@qq.com>",
@@ -11,10 +11,9 @@
   "devDependencies": {
     "chalk": "^2.4.2",
     "commander": "^2.20.0",
+    "download-git-repo": "^2.0.0",
     "inquirer": "^6.3.1",
-    "ora": "^3.4.0"
-  },
-  "dependencies": {
+    "ora": "^3.4.0",
     "mkdirp": "^0.5.1"
   }
 }
