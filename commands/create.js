@@ -6,6 +6,7 @@ const fs = require('fs')
 const path = require('path')
 const mkdirp = require('mkdirp');
 const download = require('download-git-repo');
+const rimraf = require('rimraf');
 
 const log = console.log,
   getDirName = require('path').dirname;
@@ -49,25 +50,6 @@ const writeFile = (path, contents) => {
   })
 }
 
-const remove = (dir) => {
-  return new Promise(function (resolve, reject) {
-    fs.stat(dir,function (err, stat) {
-      if(stat.isDirectory()){
-        fs.readdir(dir,function (err, files) {
-          files = files.map(file=>path.join(dir,file)); 
-          files = files.map(file=>removePromise(file)); 
-          Promise.all(files).then(function () {
-            fs.rmdir(dir,resolve);
-          })
-        })
-      }else {
-        fs.unlink(dir,resolve)
-      }
-    })
-
-  })
-}
-
 module.exports = prompt(question).then(({ frame }) => {
   const format = frame === 'React' ? '.js' : '.vue',
     checkFormat = ora('检查格式中...\n')
@@ -92,7 +74,7 @@ module.exports = prompt(question).then(({ frame }) => {
       log(chalk.red(err));
     } else {
       spinner.succeed();
-      var a = path.resolve(`./templates/${frame}/index${format}`)
+      var a = path.resolve(`./templates/templates/${frame}/index${format}`)
       fs.readFile(a, 'utf8', async (err, data) => {
         if (err) {
           spinner.stop()
@@ -118,8 +100,13 @@ module.exports = prompt(question).then(({ frame }) => {
           })
         )
         spinner.stop()
-        log(chalk.green(`模板生成成功`))
-        await remove(path.join(__dirname, './templates')
+        rimraf('./templates', (err)=>{
+          if(err) {
+            log(chalk.red(`模板删除失败,请手动删除模板文件`))
+            process.exit()
+          }
+          log(chalk.green('模板生成成功'))
+        })
       })
     }
 
