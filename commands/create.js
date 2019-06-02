@@ -37,7 +37,7 @@ const question = [
 
 const writeFile = (path, data) => {
   return new Promise((resolve, reject) => {
-    fs.writeFile(path, data, 'utf8', function(err) {
+    fs.writeFile(path, data, 'utf8', function (err) {
       if (err) {
         reject(err)
       } else {
@@ -46,10 +46,12 @@ const writeFile = (path, data) => {
     })
   })
 }
+
 module.exports = prompt(question).then(({ frame }) => {
-  const spinner = ora('生成模板中...\n')
+  const spinner = ora('生成模板中...\n'),
+    format = frame === 'React' ? '.js' : '.vue'
   spinner.start()
-  var a = path.resolve(`./templates/${frame}/index.js`)
+  var a = path.resolve(`./templates/${frame}/index${format}`)
   fs.readFile(a, 'utf8', async (err, data) => {
     if (err) {
       spinner.stop()
@@ -59,15 +61,17 @@ module.exports = prompt(question).then(({ frame }) => {
 
     await Promise.all(
       files.map(async name => {
+
         let template = data.replace(
-          'App', /\g/,
-          (name.charAt(0).toUpperCase() + name.slice(1)).replace('.js', '')
+          /App/g,
+          (name.charAt(0).toUpperCase() + name.slice(1)).replace(format, '')
         )
         try {
-          await writeFile(`./${dir}/${name}`, template)
+          return await writeFile(`./${dir}/${name}`, template)
         } catch (e) {
-          spinner.stop()
+          spinner.fail()
           log(chalk.red(e))
+          process.exit()
           return
         }
       })

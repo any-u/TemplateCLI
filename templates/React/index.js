@@ -1,8 +1,8 @@
-import React from './node_modules/react'
-import styled from './node_modules/styled-components'
-import { Flex, Text, Image } from './node_modules/rebass'
-import { size, position } from './node_modules/polished'
-import { connect } from './node_modules/react-redux'
+import React from 'react'
+import styled from 'styled-components'
+import { Flex } from 'rebass'
+import { size } from 'polished'
+import { connect } from 'react-redux'
 
 const Root = styled(Flex)``
 
