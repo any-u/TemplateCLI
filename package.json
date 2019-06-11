@@ -1,6 +1,6 @@
 {
   "name": "create-template-cli",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "vue or react template cli",
   "bin": {
     "tcli": "bin/index.js"
